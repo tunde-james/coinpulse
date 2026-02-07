@@ -90,20 +90,8 @@ interface TrendingCoin {
   };
 }
 
-interface SearchCoin {
-  id: string;
-  name: string;
-  symbol: string;
-  market_cap_rank: number | null;
-  thumb: string;
-  large: string;
-  data: {
-    price?: number;
-    price_change_percentage_24h: number;
-  };
-}
+type SearchCoin = CoinMarketData;
 
-// Chart Section Props (used in ChartSection.tsx)
 interface ChartSectionProps {
   coinData: {
     image: { large: string };

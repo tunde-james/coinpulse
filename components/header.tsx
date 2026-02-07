@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
+import { SearchModal } from './search-modal';
 
-const Header = () => {
+const Header = ({ trendingCoins }: { trendingCoins: TrendingCoin[] }) => {
   const pathname = usePathname();
 
   return (
@@ -32,7 +33,7 @@ const Header = () => {
             Home
           </Link>
 
-          <p>Search Modal</p>
+          <SearchModal initialTrendingCoins={trendingCoins} />
 
           <Link
             href="/coins"

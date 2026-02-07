@@ -79,3 +79,56 @@ export async function getPools(
     return fallback;
   }
 }
+
+export interface SearchCoinBasic {
+  id: string;
+  name: string;
+  api_symbol: string;
+  symbol: string;
+  market_cap_rank: number;
+  thumb: string;
+  large: string;
+}
+
+export interface SearchResponse {
+  coins: SearchCoinBasic[];
+}
+
+export async function searchCoins(query: string): Promise<CoinMarketData[]> {
+  if (!query || query.trim().length === 0) {
+    return [];
+  }
+
+  try {
+    const searchData = await fetcher<SearchResponse>('/search', { query });
+
+    const topCoinIds = searchData.coins.slice(0, 10).map((coin) => coin.id);
+
+    if (topCoinIds.length === 0) {
+      return [];
+    }
+
+    const marketData = await fetcher<CoinMarketData[]>('/coins/markets', {
+      vs_currency: 'usd',
+      ids: topCoinIds.join(','),
+      order: 'market_cap_desc',
+      price_change_percentage: '24h',
+      sparkline: false,
+    });
+
+    return marketData;
+  } catch (error) {
+    console.error('Error in searchCoins:', error);
+    return [];
+  }
+}
+
+export async function getTrendingCoins(): Promise<TrendingCoin[]> {
+  try {
+    const data = await fetcher<{ coins: TrendingCoin[] }>('/search/trending');
+    return data.coins;
+  } catch (error) {
+    console.error('Error fetching trending coins:', error);
+    return [];
+  }
+}

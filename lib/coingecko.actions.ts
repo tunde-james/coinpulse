@@ -102,7 +102,9 @@ export async function searchCoins(query: string): Promise<CoinMarketData[]> {
   try {
     const searchData = await fetcher<SearchResponse>('/search', { query });
 
-    const topCoinIds = searchData.coins.slice(0, 10).map((coin) => coin.id);
+    const topCoinIds = (searchData.coins ?? [])
+      .slice(0, 10)
+      .map((coin) => coin.id);
 
     if (topCoinIds.length === 0) {
       return [];
@@ -126,7 +128,7 @@ export async function searchCoins(query: string): Promise<CoinMarketData[]> {
 export async function getTrendingCoins(): Promise<TrendingCoin[]> {
   try {
     const data = await fetcher<{ coins: TrendingCoin[] }>('/search/trending');
-    return data.coins;
+    return data.coins ?? [];
   } catch (error) {
     console.error('Error fetching trending coins:', error);
     return [];

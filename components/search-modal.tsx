@@ -1,6 +1,5 @@
 'use client';
 
-
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useDebounce, useKey } from 'react-use';
@@ -28,7 +27,11 @@ const SearchItem = ({ coin, onSelect, isActiveName }: SearchItemProps) => {
 
   const change = isSearchCoin
     ? (coin as SearchCoin).price_change_percentage_24h
-    : (coin as TrendingCoin['item']).data.price_change_percentage_24h?.usd ?? 0;
+    : ((coin as TrendingCoin['item']).data.price_change_percentage_24h?.usd ??
+      0);
+
+  const isPositive = change > 0;
+  const isNegative = change < 0;
 
   const imageSrc = isSearchCoin
     ? (coin as SearchCoin).image
@@ -53,15 +56,14 @@ const SearchItem = ({ coin, onSelect, isActiveName }: SearchItemProps) => {
 
       <div
         className={cn('coin-change', {
-          'text-green-500': change > 0,
-          'text-red-500': change < 0,
+          'text-green-500': isPositive,
+          'text-red-500': isNegative,
+          'text-gray-400': !isPositive && !isNegative,
         })}
       >
-        {change > 0 ? (
-          <TrendingUp size={14} className="text-green-500" />
-        ) : (
-          <TrendingDown size={14} className="text-red-500" />
-        )}
+        {isPositive && <TrendingUp size={14} className="text-green-500" />}
+        {isNegative && <TrendingDown size={14} className="text-red-500" />}
+        {!isPositive && !isNegative && <span className="text-gray-400">-</span>}
         <span>{formatPercentage(Math.abs(change))}</span>
       </div>
     </CommandItem>
@@ -87,9 +89,11 @@ export const SearchModal = ({
     [searchQuery],
   );
 
-  const { data: searchResults = [], isValidating: isSearching } = useSWR<
-    SearchCoin[]
-  >(
+  const {
+    data: searchResults = [],
+    error: searchError,
+    isValidating: isSearching,
+  } = useSWR<SearchCoin[]>(
     debouncedQuery ? ['coin-search', debouncedQuery] : null,
     ([, query]) => searchCoins(query as string),
     {
@@ -122,7 +126,9 @@ export const SearchModal = ({
   const isSearchEmpty = !isSearching && !hasQuery && !showTrending;
   const isTrendingListVisible = !isSearching && showTrending;
 
-  const isNoResults = !isSearching && hasQuery && searchResults.length === 0;
+  const isSearchError = Boolean(searchError);
+  const isNoResults =
+    !isSearching && hasQuery && searchResults.length === 0 && !isSearchError;
   const isResultsVisible = !isSearching && hasQuery && searchResults.length > 0;
 
   return (
@@ -151,6 +157,10 @@ export const SearchModal = ({
 
         <CommandList className="list custom-scrollbar">
           {isSearching && <div className="empty">Searching...</div>}
+
+          {isSearchError && (
+            <div className="empty">Search failed. Please try again.</div>
+          )}
 
           {isSearchEmpty && (
             <div className="empty">Type to search for coins...</div>
@@ -191,4 +201,3 @@ export const SearchModal = ({
     </div>
   );
 };
-
